@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 class="fw-bold mb-4">Yeni Ürün Ekle</h3>
+
+<form action="/urun/ekle" method="POST" class="card p-4 shadow-sm" style="max-width:500px;">
+
+    <label class="fw-semibold">Ürün Adı</label>
+    <input type="text" name="ad" class="form-control mb-3" required>
+
+    <label class="fw-semibold">Başlangıç Fiyatı</label>
+    <input type="number" name="fiyat" class="form-control mb-4" required>
+
+    <button class="btn btn-dark w-100">Kaydet</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 class="fw-bold mb-3">{{ urun.ad }}</h3>
+
+<div class="mb-3 text-muted">
+    Başlangıç Fiyatı: <strong>{{ urun.baslangic_fiyat }} ₺</strong>
+</div>
+
+<div id="livePrice" class="alert alert-info fw-bold py-2 px-3 mb-4">
+    Canlı Fiyat Yükleniyor...
+</div>
+
+<hr class="my-4">
+
+<h5 class="fw-semibold mb-3">Fiyat Geçmişi Grafiği</h5>
+
+<div class="text-center">
+    <img id="priceGraph" src="/{{ grafik_yol }}" class="img-fluid shadow-sm rounded" alt="" style="max-height:350px;">
+</div>
+
+<hr class="my-4">
+
+<a href="/" class="btn btn-dark">Geri Dön</a>
+
+<script>
+    function fiyatGuncelle() {
+        fetch(`/api/canli-fiyat/{{ urun.id }}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("livePrice").innerHTML =
+                    `Son Fiyat: <strong>${data.fiyat} ₺</strong> <span class="text-muted">(${data.zaman})</span>`;
+                document.getElementById("priceGraph").src = "/" + data.grafik + "?t=" + new Date().getTime();
+            });
+    }
+
+    fiyatGuncelle();
+    setInterval(fiyatGuncelle, 5000);
+</script>
+
+{% endblock %}

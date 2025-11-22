@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 class="mb-4 fw-bold">Ürün Listesi</h3>
+
+<style>
+    .product-card {
+        transition: all 0.25s ease;
+        border-radius: 12px;
+    }
+    .product-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.35) !important;
+        background-color: #1a1a1d !important;
+    }
+    .live-price {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #00c3ff;
+    }
+    .trend-up {
+        color: #2ecc71;
+        font-weight: bold;
+    }
+    .trend-down {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+</style>
+
+<div class="row" id="urunListe">
+    {% for urun in urunler %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 product-card bg-dark text-light">
+            <div class="card-body">
+
+                <h5 class="card-title fw-semibold">{{ urun.ad }}</h5>
+
+                <p class="text-muted mb-1">
+                    Başlangıç: {{ urun.baslangic_fiyat }} ₺
+                </p>
+
+                <p id="canli_{{ urun.id }}" class="live-price">
+                    Canlı fiyat yükleniyor...
+                </p>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="/urun/{{ urun.id }}" class="btn btn-outline-light w-100">
+                        Grafiği Gör
+                    </a>
+                    <a href="/urun/sil/{{ urun.id }}" class="btn btn-outline-danger">
+                        Sil
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function canliFiyatlariGetir() {
+        {% for urun in urunler %}
+        fetch("/api/canli-fiyat/{{ urun.id }}")
+            .then(r => r.json())
+            .then(d => {
+
+                let elem = document.getElementById("canli_{{ urun.id }}");
+
+                if (!elem) return;
+
+                elem.innerHTML = `${d.fiyat} ₺ <span class="text-muted">(${d.zaman})</span>`;
+
+                if (d.fiyat > {{ urun.baslangic_fiyat }}) {
+                    elem.classList.add("trend-up");
+                    elem.classList.remove("trend-down");
+                } else {
+                    elem.classList.add("trend-down");
+                    elem.classList.remove("trend-up");
+                }
+            });
+        {% endfor %}
+    }
+
+    canliFiyatlariGetir();
+    setInterval(canliFiyatlariGetir, 6000);
+</script>
+
+{% endblock %}

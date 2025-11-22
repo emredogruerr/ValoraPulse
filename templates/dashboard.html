@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 class="fw-bold mb-4">ValoraPulse Dashboard</h3>
+
+<div class="row g-4">
+
+    <!-- Toplam Ürün -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted">Toplam Ürün</h6>
+                <h3 class="fw-bold" id="istat_toplam_urun">—</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bugün Oluşan Fiyat Güncellemeleri -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted">Bugünkü Güncellemeler</h6>
+                <h3 class="fw-bold" id="istat_guncelleme">—</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- En Volatil Ürün -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted">En Volatil Ürün</h6>
+                <h5 class="fw-bold mb-0" id="istat_volatil">—</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<hr class="my-5">
+
+
+<!-- Chart.js Zoom/Pan Destekli Büyük Grafik -->
+<h4 class="fw-bold mb-3">Toplam Fiyat Hareketi Grafiği</h4>
+
+<div class="card shadow-sm p-4 border-0">
+    <canvas id="dashboardChart" height="120"></canvas>
+</div>
+
+
+<hr class="my-5">
+
+
+<!-- En Stabil ve En Volatil Ürünler Listesi -->
+<div class="row mt-4">
+
+    <div class="col-md-6">
+        <h5 class="fw-bold mb-3">En Stabil Ürünler</h5>
+        <ul class="list-group" id="stabil_liste"></ul>
+    </div>
+
+    <div class="col-md-6">
+        <h5 class="fw-bold mb-3">En Volatil Ürünler</h5>
+        <ul class="list-group" id="volatil_liste"></ul>
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<script>
+    function dashboardYenile() {
+        fetch("/api/dashboard")
+            .then(r => r.json())
+            .then(d => {
+
+                document.getElementById("istat_toplam_urun").innerText = d.toplam_urun;
+                document.getElementById("istat_guncelleme").innerText = d.bugunku_guncelleme;
+                document.getElementById("istat_volatil").innerText = d.en_volatil_urun;
+
+                let stabil = "";
+                d.stabil_list.forEach(u => {
+                    stabil += `<li class="list-group-item d-flex justify-content-between">
+                                <span>${u.ad}</span>
+                                <span class="text-muted">${u.degisim}%</span>
+                               </li>`;
+                });
+                document.getElementById("stabil_liste").innerHTML = stabil;
+
+                let volatil = "";
+                d.volatil_list.forEach(u => {
+                    volatil += `<li class="list-group-item d-flex justify-content-between">
+                                <span>${u.ad}</span>
+                                <span class="text-muted">${u.degisim}%</span>
+                               </li>`;
+                });
+                document.getElementById("volatil_liste").innerHTML = volatil;
+
+                if (window.chartInstance) window.chartInstance.destroy();
+
+                const ctx = document.getElementById("dashboardChart").getContext("2d");
+                window.chartInstance = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: d.grafik.tarih,
+                        datasets: [{
+                            label: "Toplam Fiyat Hareketi",
+                            data: d.grafik.fiyat,
+                            borderColor: "#00c3ff",
+                            backgroundColor: "rgba(0,195,255,0.15)",
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            zoom: {
+                                pan: { enabled: true, mode: 'x' },
+                                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x'}
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: "#ccc" } },
+                            y: { ticks: { color: "#ccc" } }
+                        }
+                    }
+                });
+            });
+    }
+
+    dashboardYenile();
+    setInterval(dashboardYenile, 7000);
+</script>
+
+{% endblock %}
